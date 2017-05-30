@@ -6,6 +6,8 @@
 
 React modal dialog is an idiomatic way to represent modal dialogs in react. It is nested inside the components that require them, and can themselves nest other dialogs. There are no global switches or state, and the contents of the dialog are defined where you need it.
 
+``` npm i @blare/react-modal-dialog --save ```
+
 ## Design Considerations
 
 React modal dialog was built with a few fundamental assumptions and constraints in mind:
