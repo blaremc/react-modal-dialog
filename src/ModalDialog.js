@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react';
+import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import dynamics from 'dynamics.js';
@@ -6,7 +6,7 @@ import centerComponent from 'react-center-component';
 import CloseCircle from './CloseCircle';
 import EventStack from 'active-event-stack';
 import keycode from 'keycode';
-import { inject } from 'narcissus';
+import {inject} from 'narcissus';
 
 const styles = {
   dialog: {
@@ -41,7 +41,7 @@ export default class ModalDialog extends React.Component {
   static propTypes = {
     onClose: PropTypes.func, // required for the close button
     className: PropTypes.string, // css class in addition to .ReactModalDialog
-    width: PropTypes.oneOfType([ PropTypes.number, PropTypes.string ]), // width
+    width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // width
     topOffset: PropTypes.number, // injected by @centerComponent
     leftOffset: PropTypes.number, // injected by @centerComponent
     margin: PropTypes.number.isRequired, // the margin around the dialog
@@ -52,12 +52,20 @@ export default class ModalDialog extends React.Component {
     recenter: PropTypes.func.isRequired,
     top: PropTypes.number,
     dismissOnBackgroundClick: PropTypes.bool,
+    animationIn: PropTypes.any, // { transform: string,duration: number,friction: number,}
+    showCloseButton: PropTypes.bool,
   }
   static defaultProps = {
     width: 'auto',
     margin: 20,
     dismissOnBackgroundClick: true,
-  }
+    animationIn: {
+      transform: '0.5',
+      duration: 500,
+      friction: 400,
+    }
+  };
+
   componentWillMount = () => {
     /**
      * This is done in the componentWillMount instead of the componentDidMount
@@ -65,8 +73,8 @@ export default class ModalDialog extends React.Component {
      * for events after its parent
      */
     this.eventToken = EventStack.addListenable([
-      [ 'click', this.handleGlobalClick ],
-      [ 'keydown', this.handleGlobalKeydown ],
+      ['click', this.handleGlobalClick],
+      ['keydown', this.handleGlobalKeydown],
     ]);
   };
   componentWillReceiveProps = (nextProps) => {
@@ -94,7 +102,7 @@ export default class ModalDialog extends React.Component {
   };
   didAnimateInAlready = false;
   shouldClickDismiss = (event) => {
-    const { target } = event;
+    const {target} = event;
     // This piece of code isolates targets which are fake clicked by things
     // like file-drop handlers
     if (target.tagName === 'INPUT' && target.type === 'file') {
@@ -109,39 +117,44 @@ export default class ModalDialog extends React.Component {
   };
   handleGlobalClick = (event) => {
     if (this.shouldClickDismiss(event)) {
-      if (typeof this.props.onClose == 'function') {
+      if (typeof this.props.onClose === 'function') {
         this.props.onClose(event);
       }
     }
   };
   handleGlobalKeydown = (event) => {
     if (keycode(event) === 'esc') {
-      if (typeof this.props.onClose == 'function') {
+      if (typeof this.props.onClose === 'function') {
         this.props.onClose(event);
       }
     }
   };
+
   animateIn = () => {
     this.didAnimateInAlready = true;
 
-    // Animate this node once it is mounted
-    const node = ReactDOM.findDOMNode(this);
+    if (this.props.animationIn) {
+      // Animate this node once it is mounted
+      const node = ReactDOM.findDOMNode(this);
 
-    // This sets the scale...
-    if (document.body.style.transform == null) {
-      node.style.WebkitTransform = 'scale(0.5)';
-    } else {
-      node.style.transform = 'scale(0.5)';
+      // This sets the scale...
+      if (document.body.style.transform == null) {
+        node.style.WebkitTransform = this.props.animationIn.transform;
+      } else {
+        node.style.transform = this.props.animationIn.transform;
+      }
+
+      dynamics.animate(node, {
+        scale: 1,
+      }, {
+        type: dynamics.spring,
+        duration: this.props.animationIn.duration,
+        friction: this.props.animationIn.friction,
+      });
     }
-
-    dynamics.animate(node, {
-      scale: 1,
-    }, {
-      type: dynamics.spring,
-      duration: 500,
-      friction: 400,
-    });
   };
+
+
   render = () => {
     const {
       props: {
@@ -157,6 +170,8 @@ export default class ModalDialog extends React.Component {
         top, // eslint-disable-line no-unused-vars, this line is used to remove parameters from rest
         topOffset,
         width,
+        showCloseButton,
+        animationIn,
         dismissOnBackgroundClick,
         ...rest,
       },
@@ -174,16 +189,16 @@ export default class ModalDialog extends React.Component {
     const divClassName = classNames(inject(styles.dialog), className);
 
     return <div {...rest}
-      ref="self"
-      className={divClassName}
-      style={dialogStyle}
+                ref="self"
+                className={divClassName}
+                style={dialogStyle}
     >
       {
-        onClose ?
-        <a className={inject(styles.closeButton)} onClick={onClose}>
-          <CloseCircle diameter={40}/>
-        </a> :
-        null
+        showCloseButton && onClose ?
+          <a className={inject(styles.closeButton)} onClick={onClose}>
+            <CloseCircle diameter={40}/>
+          </a> :
+          null
       }
       {children}
     </div>;

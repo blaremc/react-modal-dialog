@@ -1,10 +1,10 @@
-import React, { PropTypes } from 'react';
+import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import dynamics from 'dynamics.js';
 import CloseCircle from './CloseCircle';
 import EventStack from 'active-event-stack';
 import keycode from 'keycode';
-import { inject } from 'narcissus';
+import {inject} from 'narcissus';
 
 const styles = {
   closeButton: {
@@ -25,8 +25,18 @@ export default class UnstyledFlexDialog extends React.Component {
   static propTypes = {
     children: PropTypes.node,
     componentIsLeaving: PropTypes.bool,
+    animationIn: PropTypes.any, // { transform: string,duration: number,friction: number,}
+    showCloseButton: PropTypes.bool,
     onClose: PropTypes.func,
     style: PropTypes.object,
+  };
+
+  static defaultProps = {
+    animationIn: {
+      transform: '0.5',
+      duration: 500,
+      friction: 400,
+    }
   };
   componentWillMount = () => {
     /**
@@ -35,8 +45,8 @@ export default class UnstyledFlexDialog extends React.Component {
      * for events after its parent
      */
     this.eventToken = EventStack.addListenable([
-      [ 'click', this.handleGlobalClick ],
-      [ 'keydown', this.handleGlobalKeydown ],
+      ['click', this.handleGlobalClick],
+      ['keydown', this.handleGlobalKeydown],
     ]);
   };
   componentDidMount = () => {
@@ -59,7 +69,7 @@ export default class UnstyledFlexDialog extends React.Component {
   };
   didAnimateInAlready = false;
   shouldClickDismiss = (event) => {
-    const { target } = event;
+    const {target} = event;
     // This piece of code isolates targets which are fake clicked by things
     // like file-drop handlers
     if (target.tagName === 'INPUT' && target.type === 'file') {
@@ -71,14 +81,14 @@ export default class UnstyledFlexDialog extends React.Component {
   };
   handleGlobalClick = (event) => {
     if (this.shouldClickDismiss(event)) {
-      if (typeof this.props.onClose == 'function') {
+      if (typeof this.props.onClose === 'function') {
         this.props.onClose();
       }
     }
   };
   handleGlobalKeydown = (event) => {
     if (keycode(event) === 'esc') {
-      if (typeof this.props.onClose == 'function') {
+      if (typeof this.props.onClose === 'function') {
         this.props.onClose();
       }
     }
@@ -86,23 +96,25 @@ export default class UnstyledFlexDialog extends React.Component {
   animateIn = () => {
     this.didAnimateInAlready = true;
 
-    // Animate this node once it is mounted
-    const node = ReactDOM.findDOMNode(this.refs.self);
+    if (this.props.animationIn) {
+      // Animate this node once it is mounted
+      const node = ReactDOM.findDOMNode(this.refs.self);
 
-    // This sets the scale...
-    if (document.body.style.transform == null) {
-      node.style.WebkitTransform = 'scale(0.5)';
-    } else {
-      node.style.transform = 'scale(0.5)';
+      // This sets the scale...
+      if (document.body.style.transform == null) {
+        node.style.WebkitTransform = this.props.animationIn.transform;
+      } else {
+        node.style.transform = this.props.animationIn.transform;
+      }
+
+      dynamics.animate(node, {
+        scale: 1,
+      }, {
+        type: dynamics.spring,
+        duration: this.props.animationIn.duration,
+        friction: this.props.animationIn.friction,
+      });
     }
-
-    dynamics.animate(node, {
-      scale: 1,
-    }, {
-      type: dynamics.spring,
-      duration: 500,
-      friction: 400,
-    });
   };
   render = () => {
     const {
@@ -111,6 +123,7 @@ export default class UnstyledFlexDialog extends React.Component {
         componentIsLeaving, // eslint-disable-line no-unused-vars, this line is used to remove parameters from rest
         onClose,
         style,
+        showCloseButton,
         ...rest,
       },
     } = this;
@@ -127,7 +140,7 @@ export default class UnstyledFlexDialog extends React.Component {
         overflowY: 'auto',
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', overflow: 'visible' }}>
+      <div style={{display: 'flex', flexDirection: 'column', overflow: 'visible'}}>
         <div
           ref="self"
           style={{
@@ -140,7 +153,7 @@ export default class UnstyledFlexDialog extends React.Component {
           {...rest}
         >
           {
-            onClose != null &&
+            showCloseButton && !!onClose &&
             <a className={inject(styles.closeButton)} onClick={onClose}>
               <CloseCircle diameter={40}/>
             </a>
