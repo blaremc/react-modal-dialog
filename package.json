@@ -1,10 +1,10 @@
 {
-  "name": "react-modal-dialog",
-  "version": "4.0.6",
+  "name": "@blare/react-modal-dialog",
+  "version": "4.0.9",
   "description": "A simple, idiomatic, and declarative way to launch modal dialogs in ReactJS",
   "repository": {
     "type": "git",
-    "url": "https://github.com/qimingweng/react-modal-dialog"
+    "url": "https://github.com/blaremc/react-modal-dialog"
   },
   "main": "lib/index.js",
   "edusightMain": "src/index.js",
